@@ -1,22 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: number-game-prod
+  name: number-game-dev
   namespace: argocd
   labels:
-    environment: production
+    environment: development
 spec:
   project: default
   source:
     repoURL: https://github.com/Number-Game-App/number-game-platform
-    targetRevision: main
+    targetRevision: develop
     path: helm-chart
     helm:
       valueFiles:
-        - values/production.yaml
+        - values/development.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: number-game-prod
+    namespace: number-game-dev
   syncPolicy:
     automated:
       prune: true
