@@ -3,7 +3,7 @@ replicaCount: 2
 
 image:
   repository: dockerakilesh/number-game
-  tag: "latest"
+  tag: "6abfbfb"
   pullPolicy: Always
 
 service:
