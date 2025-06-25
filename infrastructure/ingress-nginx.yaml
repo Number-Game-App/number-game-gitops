@@ -1,0 +1,98 @@
+# Nginx Ingress Controller Installation
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-nginx
+  namespace: argocd
+  labels:
+    app: ingress-nginx
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    targetRevision: 4.10.1
+    chart: ingress-nginx
+    helm:
+      values: |
+        # Nginx Ingress Controller configuration
+        controller:
+          # Enable metrics for monitoring
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                app: ingress-nginx
+          
+          # Configure for local development
+          service:
+            type: LoadBalancer
+            
+          # Enable admission webhooks
+          admissionWebhooks:
+            enabled: true
+            
+          # Resource limits
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          
+          # Configuration for game.local
+          config:
+            # Security headers
+            add-headers: "ingress-nginx/custom-headers"
+            # Enable real IP
+            use-forwarded-headers: "true"
+            compute-full-forwarded-for: "true"
+            
+        # Default backend
+        defaultBackend:
+          enabled: true
+          image:
+            repository: registry.k8s.io/defaultbackend-amd64
+            tag: "1.5"
+          resources:
+            limits:
+              cpu: 20m
+              memory: 30Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m0s
+---
+# Custom headers ConfigMap for security
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-headers
+  namespace: ingress-nginx
+data:
+  X-Frame-Options: "SAMEORIGIN"
+  X-Content-Type-Options: "nosniff"
+  X-XSS-Protection: "1; mode=block"
+  Referrer-Policy: "strict-origin-when-cross-origin"
