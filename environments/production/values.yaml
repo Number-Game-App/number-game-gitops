@@ -3,7 +3,7 @@ replicaCount: 2
 
 image:
   repository: dockerakilesh/number-game
-  tag: "build-17"
+  tag: "build-23"
   pullPolicy: Always
 
 service:
